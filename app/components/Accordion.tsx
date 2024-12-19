@@ -51,7 +51,7 @@ const Accordion: React.FC<AccordionProps> = ({
       value = e.target.value.replace(/[^A-Za-z\s]/g, "");
     }
     if (e.target.name === "age") {
-      value = parseInt(e.target.value);
+      value = parseInt(e.target.value || "0");
     }
     setFormData({ ...formData, [e.target.name]: value });
   };
