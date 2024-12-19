@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiTrash2, FiEdit2 } from "react-icons/fi";
 import { FaRegTimesCircle } from "react-icons/fa";
 import { FaRegCheckCircle } from "react-icons/fa";
@@ -40,8 +40,32 @@ const Accordion: React.FC<AccordionProps> = ({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let value: string | number = e.target.value;
+    if (e.target.name === "first") {
+      value = e.target.value.replace(/[^A-Za-z\s]/g, "");
+    }
+    if (e.target.name === "last") {
+      value = e.target.value.replace(/[^A-Za-z\s]/g, "");
+    }
+    if (e.target.name === "country") {
+      value = e.target.value.replace(/[^A-Za-z\s]/g, "");
+    }
+    if (e.target.name === "age") {
+      value = parseInt(e.target.value);
+    }
+    setFormData({ ...formData, [e.target.name]: value });
   };
+
+  const age = Math.floor(
+    (new Date().getTime() - new Date(user.dob).getTime()) /
+      (365.25 * 24 * 60 * 60 * 1000)
+  );
+
+  useEffect(() => {
+    const data = { ...formData, age: age };
+    setFormData(data);
+    setBackupData(data);
+  }, []);
 
   const handleSave = () => {
     onSave({ ...formData });
@@ -54,12 +78,12 @@ const Accordion: React.FC<AccordionProps> = ({
     setIsEditing(false);
   };
 
+  const isSaveDisabled =
+    JSON.stringify(formData) === JSON.stringify(backupData);
+
   return (
     <div className="mb-5 p-4 border rounded-xl ">
-      <div
-        onClick={onToggle}
-        className="cursor-pointer  flex justify-between items-center "
-      >
+      <div className="cursor-pointer  flex justify-between items-center ">
         <div className="flex items-center">
           <img
             src={user.picture}
@@ -96,7 +120,11 @@ const Accordion: React.FC<AccordionProps> = ({
             <p className="ml-2">{formData.last}</p>
           )}
         </div>
-        <span>{isOpen ? "-" : "+"}</span>
+        {
+          <span onClick={onToggle} className="p-4">
+            {isOpen ? "-" : "+"}
+          </span>
+        }
       </div>
 
       {isOpen && (
@@ -128,10 +156,10 @@ const Accordion: React.FC<AccordionProps> = ({
                   onChange={(e: any) => handleChange(e)}
                   className="border rounded-xl p-1.5 w-full"
                 >
-                  <option>Male</option>
-                  <option>Female</option>
-                  <option>Rather not say</option>
-                  <option>Other</option>
+                  <option>male</option>
+                  <option>female</option>
+                  <option>rather not say</option>
+                  <option>other</option>
                 </select>
               ) : (
                 <p>{formData.gender}</p>
@@ -164,7 +192,7 @@ const Accordion: React.FC<AccordionProps> = ({
                 value={formData.description}
                 onChange={handleChange}
                 className="border rounded-xl p-1 w-full"
-                rows={3}
+                rows={5}
               ></textarea>
             ) : (
               <p className="text-gray-700">{formData.description}</p>
@@ -174,12 +202,17 @@ const Accordion: React.FC<AccordionProps> = ({
           <div className="flex justify-end space-x-4">
             {isEditing ? (
               <>
-                <button
-                  onClick={handleSave}
-                  className="text-green-500 hover:text-green-700"
-                >
-                  <FaRegCheckCircle className="inline-block mr-1" /> {""}
-                </button>
+                {!isSaveDisabled ? (
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaveDisabled}
+                    className="text-green-500 hover:text-green-700"
+                  >
+                    <FaRegCheckCircle className="inline-block mr-1" /> {""}
+                  </button>
+                ) : (
+                  <></>
+                )}
                 <button
                   onClick={handleCancel}
                   className="text-red-500 hover:text-red-700"
@@ -190,8 +223,13 @@ const Accordion: React.FC<AccordionProps> = ({
             ) : (
               <>
                 <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-blue-500 hover:text-blue-700"
+                  onClick={() =>
+                    formData.age > 18 ? setIsEditing(true) : null
+                  }
+                  disabled={formData.age < 18}
+                  className={`text-blue-500 hover:text-blue-700 ${
+                    formData.age < 18 ? "cursor-not-allowed" : ""
+                  }`}
                 >
                   <FiEdit2 className="inline-block mr-1" /> {""}
                 </button>
